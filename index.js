@@ -15,10 +15,10 @@ const server = http.createServer(app);
 
 server.listen(8999, () => console.log('API https Server Connected at port 8999'));
 
-app.use(cors({ origin: 'https://edu.redmetas.com', credentials: true }));
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use('/static', express.static('static'));
+app.use(cors({ origin: 'https://edu.redmetas.com', credentials: true }));
 
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
