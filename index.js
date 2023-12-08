@@ -24,16 +24,16 @@ const storage = multer.diskStorage({
     destination: function (req, file, cb) {
         const schoolId = file.originalname.split('_')[0];
         const path = `static/images/${schoolId}`;
-        if(!fs.existsSync(path)) fs.mkdirSync(path);
+        if (!fs.existsSync(path)) fs.mkdirSync(path);
         cb(null, path);
 
     },
-    filename: function(req, file, cb) {
+    filename: function (req, file, cb) {
         const fileName = file.originalname.split('_')[1]
         cb(null, fileName);
     }
 })
-const upload = multer({storage: storage});
+const upload = multer({ storage: storage });
 
 
 const mongoose = require('mongoose');
@@ -45,6 +45,10 @@ mongoose.connect(process.env.MONGO_URI, {
 }).then(() => console.log('MongoDB connected...'))
     .catch(error => console.log(error));
 
+app.get('/', (req, res) => {
+    res.status(200).json({ success: true });
+});
+
 app.get('/getThumbnails', async (req, res) => {
     const thumbnails = await Thumbnail.find({}).sort('orderIdx');
     try {
@@ -55,19 +59,19 @@ app.get('/getThumbnails', async (req, res) => {
 app.post('/getImages', async (req, res) => {
     const { schoolName } = req.body;
     const images = await Image.find({ schoolName }).sort('orderIdx');
-    const schoolData = await Thumbnail.findOne({"_id": schoolName});
+    const schoolData = await Thumbnail.findOne({ "_id": schoolName });
     try {
-        return res.status(200).json({schoolName: schoolData.schoolName ,images: images});
+        return res.status(200).json({ schoolName: schoolData.schoolName, images: images });
     } catch (err) { return res.status(500).json({ error: err }); }
 });
 
 app.post('/editSchoolList', async (req, res) => {
-    const {editedData, deletedData} = req.body;
+    const { editedData, deletedData } = req.body;
     deletedData.forEach(async element => {
-        await Thumbnail.findOneAndDelete({"_id": element});
+        await Thumbnail.findOneAndDelete({ "_id": element });
     });
     editedData.forEach(async element => {
-        if(element._id === '') {
+        if (element._id === '') {
             const thumbnail = new Thumbnail({
                 schoolName: element.schoolName,
                 imgUrl: element.imgUrl,
@@ -75,48 +79,48 @@ app.post('/editSchoolList', async (req, res) => {
             });
             thumbnail.save();
         } else {
-            await Thumbnail.findOneAndReplace({"_id": element._id}, element);
+            await Thumbnail.findOneAndReplace({ "_id": element._id }, element);
         }
     });
     try {
-        return res.status(200).json({success: true});
+        return res.status(200).json({ success: true });
     } catch (err) { return res.status(500).json({ error: err }); }
 });
 
 app.post('/uploadImg', upload.array('files'), async (req, res) => {
     // let file =  req.file;
     try {
-        return res.status(200).json({success: true});
+        return res.status(200).json({ success: true });
     } catch (err) { return res.status(500).json({ error: err }); }
 })
 
 app.post('/editGallery', async (req, res) => {
-    const {editedData, deletedData} = req.body;
+    const { editedData, deletedData } = req.body;
     console.log(deletedData);
-    for(const delData of deletedData) {
-        const thatData = await Image.findOne({"_id": delData});
+    for (const delData of deletedData) {
+        const thatData = await Image.findOne({ "_id": delData });
         const schoolName = thatData.schoolData;
         const fileUrl = thatData.imgUrl;
-        if(thatData.isThumbnail) {
-            await Thumbnail.findOneAndUpdate({"_id": schoolName}, {imgUrl: ''});
-            await Image.findOneAndDelete({"_id": delData});
+        if (thatData.isThumbnail) {
+            await Thumbnail.findOneAndUpdate({ "_id": schoolName }, { imgUrl: '' });
+            await Image.findOneAndDelete({ "_id": delData });
             fs.unlinkSync(`static/${fileUrl}`);
-        }else {
-            await Image.findOneAndDelete({"_id": delData});
+        } else {
+            await Image.findOneAndDelete({ "_id": delData });
             fs.unlinkSync(`static/${fileUrl}`);
         };
     }
-    for(const data of editedData) {
-        if(data.isThumbnail) {
-            if(data._id==='') {
+    for (const data of editedData) {
+        if (data.isThumbnail) {
+            if (data._id === '') {
                 const url = `/images/${data.schoolName}/${data.tempId}.${data.fileExtension}`;
-                await Thumbnail.findOneAndUpdate({"_id": data.schoolName}, {imgUrl: url});
+                await Thumbnail.findOneAndUpdate({ "_id": data.schoolName }, { imgUrl: url });
             } else {
                 const url = data.imgUrl;
-                await Thumbnail.findOneAndUpdate({"_id": data.schoolName}, {imgUrl: url});
+                await Thumbnail.findOneAndUpdate({ "_id": data.schoolName }, { imgUrl: url });
             }
         }
-        if(data._id==='') {
+        if (data._id === '') {
             const imageData = new Image({
                 schoolName: data.schoolName,
                 orderIdx: data.orderIdx,
@@ -126,26 +130,26 @@ app.post('/editGallery', async (req, res) => {
             });
             imageData.save();
         } else {
-            await Image.findOneAndReplace({"_id": data._id}, data);
+            await Image.findOneAndReplace({ "_id": data._id }, data);
         }
     }
     try {
-        return res.status(200).json({success: true});
+        return res.status(200).json({ success: true });
     } catch (err) { return res.status(500).json({ error: err }); }
 });
 
 app.post('/adminLogin', async (req, res) => {
-    const {adminId, adminPw} = req.body;
+    const { adminId, adminPw } = req.body;
     // const salt = await bcrypt.genSalt(10);
     // const newPw = await bcrypt.hash(adminPw, salt);
     const validPassword = await bcrypt.compare(adminPw, '$2b$10$PnVNU0vW5fBc51sNdW5.IuX/fj1wOJ5q6pf2y.3imYWaMYIIai5be');
-    if (adminId==='admin' && validPassword) {
+    if (adminId === 'admin' && validPassword) {
         try {
-            return res.status(200).json({success: true});
+            return res.status(200).json({ success: true });
         } catch (err) { return res.status(500).json({ error: err }); }
     } else {
         try {
-            return res.status(200).json({success: false});
+            return res.status(200).json({ success: false });
         } catch (err) { return res.status(500).json({ error: err }); }
     }
 });
