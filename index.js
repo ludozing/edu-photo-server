@@ -7,7 +7,6 @@ const app = express();
 const https = require('https');
 const http = require('http');
 const fs = require('fs');
-const session = require('express-session');
 const multer = require('multer');
 
 const bcrypt = require('bcrypt');
@@ -23,22 +22,6 @@ app.use(bodyParser.json());
 app.use('/static', express.static('static'));
 app.use(cors({ origin: 'https://edu.redmetas.com', credentials: true }));
 // app.use(cors({ origin: 'http://localhost:3000' }));
-
-app.use(
-    session({
-        secret: '@codestates',
-        resave: false,
-        saveUninitialized: true,
-        cookie: {
-            domain: 'localhost',
-            path: '/',
-            maxAge: 24 * 6 * 60 * 10000,
-            sameSite: 'none',
-            httpOnly: true,
-            secure: true,
-        },
-    })
-);
 
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
@@ -188,6 +171,8 @@ app.post('/adminLogin', async (req, res) => {
                 maxAge: 1209600000
             });
             res.status(201).json({
+                accessToken: accessToken,
+                refreshToken: refreshToken,
                 success: true
             });
         } catch (err) { return res.status(500).json({ error: err }); }
