@@ -20,7 +20,7 @@ server.listen(8008, () => console.log('API https Server Connected at port 8008')
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use('/static', express.static('static'));
-app.use(cors({ origin: 'https://edu.redmetas.com', credentials: true }));
+app.use(cors({ origin: 'https://eduphoto.redmetas.com', credentials: true }));
 // app.use(cors({ origin: 'http://localhost:3000' }));
 
 const storage = multer.diskStorage({
@@ -171,8 +171,8 @@ app.post('/adminLogin', async (req, res) => {
                 maxAge: 1209600000
             });
             res.status(201).json({
-                accessToken: accessToken,
-                refreshToken: refreshToken,
+                // accessToken: accessToken,
+                // refreshToken: refreshToken,
                 success: true
             });
         } catch (err) { return res.status(500).json({ error: err }); }
